@@ -68,6 +68,13 @@ RSpec.describe RMT::CLI::Mirror do
         end
       end
 
+      it 'shows summary' do
+        expect_any_instance_of(RMT::Mirror).to receive(:mirror_suma_product_tree)
+        expect_any_instance_of(RMT::Mirror).to receive(:mirror)
+
+        expect { command }.to output(/\e\[32mSummary:\e\[0m/).to_stdout
+      end
+
       context 'with exceptions during mirroring' do
         before do
           allow_any_instance_of(RMT::Mirror)

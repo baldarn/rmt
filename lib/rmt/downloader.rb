@@ -11,7 +11,7 @@ class RMT::Downloader
   RETRIES = 4
   RETRY_DELAY_SECONDS = 2
 
-  attr_accessor :concurrency, :logger, :auth_token
+  attr_accessor :concurrency, :logger, :auth_token, :stats
 
   def initialize(logger:, auth_token: nil, track_files: true)
     Typhoeus::Config.user_agent = "RMT/#{RMT::VERSION}"
@@ -19,6 +19,7 @@ class RMT::Downloader
 
     @concurrency = 4
     @auth_token = auth_token
+    @stats = {}
     @logger = logger
     @track_files = track_files
     @queue = []
@@ -203,6 +204,8 @@ class RMT::Downloader
       File.utime(timestamp, timestamp, file.local_path)
     end
 
+    set_stats(file)
+
     if @track_files && file.local_path.match?(/\.(rpm|drpm)$/)
       DownloadedFile.track_file(checksum: file.checksum,
                                 checksum_type: file.checksum_type,
@@ -247,6 +250,11 @@ class RMT::Downloader
     dirname = File.dirname(file_path)
 
     FileUtils.mkdir_p(dirname)
+  end
+
+  def set_stats(file)
+    @stats[:total_trasferred_files] = (@stats[:total_trasferred_files] || 0) + 1
+    @stats[:total_trasferred_files_size] = (@stats[:total_trasferred_files_size] || 0) + File.size(file.local_path)
   end
 
 end

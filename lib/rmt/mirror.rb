@@ -69,6 +69,8 @@ class RMT::Mirror
 
   attr_reader :airgap_mode, :deep_verify, :downloader, :logger, :mirroring_base_dir, :mirror_src
 
+  delegate :stats, to: :downloader
+
   def create_repository_dir(repository_dir)
     FileUtils.mkpath(repository_dir) unless Dir.exist?(repository_dir)
   rescue StandardError => e

@@ -3,6 +3,8 @@ class RMT::CLI::Mirror < RMT::CLI::Base
 
   desc 'all', _('Mirror all enabled repositories')
   def all
+    start_time = Time.current
+
     RMT::Lockfile.lock('mirror') do
       begin
         mirror.mirror_suma_product_tree(repository_url: 'https://scc.suse.com/suma/')
@@ -23,6 +25,15 @@ class RMT::CLI::Mirror < RMT::CLI::Base
         mirrored_repo_ids.concat(repos.pluck(:id))
       end
 
+      @summary = RMT::Summary.new(
+        start_exec_time: start_time,
+        end_exec_time: Time.current,
+        total_mirrored_repositories: mirrored_repo_ids.size,
+        total_trasferred_files: mirror.stats[:total_trasferred_files],
+        total_trasferred_files_size: mirror.stats[:total_trasferred_files_size]
+      )
+
+      print_summary
       finish_execution
     end
   end
@@ -153,6 +164,16 @@ class RMT::CLI::Mirror < RMT::CLI::Base
       errors.each { |e| logger.warn("\e[31m" + (e.end_with?('.') ? e : e + '.') + "\e[0m") }
       logger.warn("\e[33m" + _('Mirroring completed with errors.') + "\e[0m")
       raise RMT::CLI::Error.new('The command exited with errors.') unless options[:do_not_raise_unpublished] && in_alpha_or_beta?
+    end
+  end
+
+  def print_summary
+    if @summary
+      logger.info("\e[32m" + _('Summary:') + "\e[0m")
+      logger.info("\e[32m" + _("Total mirrored repositories: #{@summary.total_mirrored_repositories}") + "\e[0m")
+      logger.info("\e[32m" + _("Total transferred files: #{@summary.total_trasferred_files}") + "\e[0m")
+      logger.info("\e[32m" + _("Total transferred file size: #{@summary.pretty_total_transferred_file_size}") + "\e[0m")
+      logger.info("\e[32m" + _("Total Mirror Time: #{@summary.pretty_total_mirror_time}") + "\e[0m")
     end
   end
 end

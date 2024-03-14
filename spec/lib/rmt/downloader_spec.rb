@@ -341,6 +341,11 @@ RSpec.describe RMT::Downloader do
       expect(File.size(repomd_xml_file.local_path)).to eq(File.size(file_fixture('dummy_repo/repodata/repomd.xml')))
     end
 
+    it 'has correct stats' do
+      download
+      expect(downloader.stats).to eq({ total_trasferred_files: 1, total_trasferred_files_size: 1939 })
+    end
+
     context "when file doesn't exist" do
       let(:repository_url) { 'file://' + File.expand_path(file_fixture('.')) + '/non_existent/' }
 
