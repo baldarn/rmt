@@ -72,7 +72,24 @@ RSpec.describe RMT::CLI::Mirror do
         expect_any_instance_of(RMT::Mirror).to receive(:mirror_suma_product_tree)
         expect_any_instance_of(RMT::Mirror).to receive(:mirror)
 
-        expect { command }.to output(/\e\[32mSummary:\e\[0m/).to_stdout
+        allow_any_instance_of(RMT::Mirror)
+          .to receive(:stats)
+          .and_return({ total_trasferred_files: 1, total_trasferred_files_size: 5000 })
+
+        allow(Time).to receive(:current).and_return(Time.parse('10:00'), Time.parse('10:10'))
+
+        regex = /
+          Summary:.*
+          Total\s+mirrored\s+repositories:\s*1
+          .*
+          Total\s+transferred\s+files:\s*1
+          .*
+          Total\s+transferred\s+file\s+size:\s4\.88\s+KB
+          .*
+          Total\s+Mirror\s+Time:\s*00:10:00
+        /mx
+
+        expect { command }.to output(regex).to_stdout
       end
 
       context 'with exceptions during mirroring' do
